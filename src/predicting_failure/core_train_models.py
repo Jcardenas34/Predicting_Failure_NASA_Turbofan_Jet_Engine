@@ -58,6 +58,8 @@ def train_model(model, train_loader, val_loader, loss_function, optimizer, num_e
         model.eval()
         with torch.no_grad():
             for data, target in val_loader:
+                data = data.to(device)
+                target = target.to(device)
                 output = model(data)
                 loss = loss_function(output, target)
                 val_loss += loss.item()
