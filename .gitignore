@@ -1,2 +1,6 @@
 # Directories
 /models
+
+# Files
+*.log
+*.pyc

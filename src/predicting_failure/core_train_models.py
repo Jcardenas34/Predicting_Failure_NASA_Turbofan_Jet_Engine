@@ -15,7 +15,7 @@ def time_function(func):
 
 
 @time_function
-def train_model(model, train_loader, loss_function, optimizer, num_epochs=10):
+def train_model(model, train_loader, val_loader, loss_function, optimizer, num_epochs=10):
     """
     Train the model using the provided data loader, criterion, and optimizer.
 
@@ -34,15 +34,19 @@ def train_model(model, train_loader, loss_function, optimizer, num_epochs=10):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    model.train()
+    
     
 
     # Train using num_epochs
     for epoch in range(num_epochs):
         running_loss = 0.0
+        val_loss = 0.0
+
+        # Training phase
+        model.train()
         for inputs, targets in train_loader:
-            inputs.to(device)
-            targets.to(device)
+            inputs = inputs.to(device)
+            targets = targets.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = loss_function(outputs, targets)
@@ -50,7 +54,18 @@ def train_model(model, train_loader, loss_function, optimizer, num_epochs=10):
             optimizer.step()
             running_loss += loss.item()
 
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {running_loss / len(train_loader):.4f}')
+        # Validation phase
+        model.eval()
+        with torch.no_grad():
+            for data, target in val_loader:
+                output = model(data)
+                loss = loss_function(output, target)
+                val_loss += loss.item()
+        
+        # Average validation loss
+        val_loss /= len(val_loader)
+
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {running_loss / len(train_loader):.4f}, Average Val Loss: {val_loss / len(val_loader):.4f}')
         model_path = f"models/RUL_regressor_unit1_epoch_{epoch}.pth"
         torch.save(model.state_dict(), model_path)
 
