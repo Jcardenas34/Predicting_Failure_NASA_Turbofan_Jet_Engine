@@ -101,7 +101,7 @@ class Recurrent(nn.Module):
         :param x: Input tensor
         :return: Output tensor
         '''
-        print(x.shape)
+        # print(x.shape)
         # x = self.inlayer(x)          
         x = x.permute(0, 2, 1)
         x, _= self.lstm_layer(x)
