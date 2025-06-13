@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+
+
+[project]
+name = "predicting_failure"
+version = "0.0.1"
+authors = [{name="Juan Cardenas", email="cardenas.juan5453@gmail.com"}]
+description = "A package that will predict failure of a NASA jet engine"
+requires-python = ">=3.11"
+README = "README.MD"
+license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://github.com/Jcardenas34/Predicting_Failure_NASA_Turbofan_Jet_Engine/tree/main"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/predicting_failure"]
