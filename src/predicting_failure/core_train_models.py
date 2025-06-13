@@ -1,6 +1,6 @@
 import torch
 from predicting_failure.models import Recurrent
-
+from predicting_failure.helpers import EarlyStopping
 import time
 
 def time_function(func):
@@ -35,7 +35,9 @@ def train_model(model, train_loader, val_loader, loss_function, optimizer, num_e
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     
-    
+    patience = 5
+    delta = .01
+    early_stopping = EarlyStopping(patience=patience, delta=delta, verbose=True)
 
     # Train using num_epochs
     for epoch in range(num_epochs):
@@ -70,5 +72,12 @@ def train_model(model, train_loader, val_loader, loss_function, optimizer, num_e
         print(f'Epoch [{epoch + 1}/{num_epochs}], Average Loss: {running_loss / len(train_loader):.4f}, Average Val Loss: {val_loss / len(val_loader):.4f}')
         model_path = f"models/RUL_regressor_unit1_epoch_{epoch}.pth"
         torch.save(model.state_dict(), model_path)
+
+        # Check early stopping condition
+        early_stopping.check_early_stop(val_loss)
+        
+        if early_stopping.stop_training:
+            print(f"Early stopping at epoch {epoch}")
+            break
 
     return model
