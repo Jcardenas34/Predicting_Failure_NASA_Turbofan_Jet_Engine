@@ -211,23 +211,33 @@ class SingleRUL(nn.Module):
         return model
 
 
+    # def forward(self, x):
+    #     '''
+    #     Forward pass of the model
+    #     :param x: Input tensor
+    #     :return: Output tensor
+    #     '''
+    #     # print(x.shape)
+    #     # x = self.inlayer(x)          
+    #     # x = x.permute(0, 2, 1)
+    #     x, _= self.lstm_layer(x)
+    #     x = F.relu(x)
+    #     x = self.dense_layer(x)
+    #     x = F.relu(x)
+    #     x = self.transition_layer(x)
+    #     x = F.relu(x)
+    #     last_timestep = x[:, -1]  # (batch, hidden_size)
+    #     rul = self.output_layer(last_timestep)  # (batch, 1)
+    #     return rul.squeeze(-1)
+    
     def forward(self, x):
         '''
-        Forward pass of the model
-        :param x: Input tensor
-        :return: Output tensor
+        :param x: Input tensor of shape (batch, seq_len, features)
+        :return: RUL predictions of shape (batch,)
         '''
-        # print(x.shape)
-        # x = self.inlayer(x)          
-        # x = x.permute(0, 2, 1)
-        x, _= self.lstm_layer(x)
-        x = F.relu(x)
-        x = self.dense_layer(x)
-        x = F.relu(x)
-        x = self.transition_layer(x)
-        x = F.relu(x)
-        last_timestep = x[:, -1]  # (batch, hidden_size)
-        rul = self.output_layer(last_timestep)  # (batch, 1)
-        return rul.squeeze(-1)
-    
-    
+        x, _ = self.lstm_layer(x)                  # (batch, seq_len, hidden)
+        last_timestep = x[:, -1]                   # (batch, hidden)
+        x = F.relu(self.dense_layer(last_timestep))
+        x = F.relu(self.transition_layer(x))
+        rul = self.output_layer(x)                 # (batch, 1)
+        return rul.squeeze(-1)    
