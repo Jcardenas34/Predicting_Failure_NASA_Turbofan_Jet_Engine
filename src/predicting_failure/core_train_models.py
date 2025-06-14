@@ -99,7 +99,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
 
     if torch.cuda.is_available():
         print("Using GPU")
-        state_dict = torch.load(model_path, weights_only=False)
+        state_dict = torch.load(model_path)
     else:
         print("No GPU, using CPU")
         state_dict = torch.load(model_path, weights_only=True)
@@ -118,7 +118,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
     model.eval()
     # Perform evaluation
     with torch.no_grad():
-        for inputs, labels, in eval_loader:
+        for inputs, labels, lens in eval_loader:
             inputs = inputs.to(device)
             labels = labels.to(device)
 
@@ -126,23 +126,24 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
             loss = loss_function(outputs, labels)
             total_loss += loss.item()
             predictions = torch.argmax(outputs, dim=1)
+            print(f"Predictions: {predictions}, Labels: {labels}")
             all_predictions.extend(predictions.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
     # Calculate average loss and accuracy
-    average_loss = total_loss / len(eval_loader)
+    # average_loss = total_loss / len(eval_loader)
 
-    print("Printing: Predicted_RUL, true_RUL")
-    for sample in range(5):
-        print(f"Sample {sample}")
-        for i,j in zip(outputs[sample],labels[sample]):
-            # if i.item() == 0.0 or j == 0.0:
-                # break
-            print(f"{i.item():2f}, {j.item():2f}")
-    # accuracy = accuracy_score(all_labels, all_predictions)
+    # print("Printing: Predicted_RUL, true_RUL")
+    # for sample in range(5):
+    #     print(f"Sample {sample}")
+    #     for i,j in zip(outputs[sample],labels[sample]):
+    #         # if i.item() == 0.0 or j == 0.0:
+    #             # break
+    #         print(f"{i.item():2f}, {j.item():2f}")
+    # # accuracy = accuracy_score(all_labels, all_predictions)
 
-    # Print the results
-    print(f"Average Test Loss: {average_loss:.4f}")
+    # # Print the results
+    # print(f"Average Test Loss: {average_loss:.4f}")
     # print(f"Test Accuracy: {accuracy:.4f}")
 
 
