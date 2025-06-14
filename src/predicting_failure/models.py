@@ -236,7 +236,7 @@ class SingleRUL(nn.Module):
         :return: RUL predictions of shape (batch,)
         '''
         x, _ = self.lstm_layer(x)                  # (batch, seq_len, hidden)
-        last_timestep = x[:, -1]                   # (batch, hidden)
+        last_timestep = x[:, -1, :]                   # (batch, hidden)
         x = F.relu(self.dense_layer(last_timestep))
         x = F.relu(self.transition_layer(x))
         rul = self.output_layer(x)                 # (batch, 1)
