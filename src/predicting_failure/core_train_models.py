@@ -115,7 +115,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
     model.eval()
     # Perform evaluation
     with torch.no_grad():
-        for inputs, labels in eval_loader:
+        for inputs, labels, lens in eval_loader:
             inputs = inputs.to(device)
             labels = labels.to(device)
 

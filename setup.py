@@ -14,6 +14,7 @@ setup(
         "uvicorn",
         "flask",
         "torch",
+        "h5py",
 
         # Add any runtime deps here (not dev tools or testing libs)
     ],

@@ -103,7 +103,7 @@ class Recurrent(nn.Module):
         '''
         # print(x.shape)
         # x = self.inlayer(x)          
-        x = x.permute(0, 2, 1)
+        # x = x.permute(0, 2, 1)
         x, _= self.lstm_layer(x)
         x = self.dense_layer(x)
         x = self.transition_layer(x)

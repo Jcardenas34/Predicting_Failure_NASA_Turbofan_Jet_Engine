@@ -21,7 +21,7 @@ def main(args):
     optimizer = Adam(model.parameters(), lr=0.001)
 
     # data_path =  "/Users/chiral/git_projects/Predicting_Failure_NASA_Turbofan_Jet_Engine/data/unit_1.h5"
-    train_loader, val_loader = load_data(args.data_path)
+    train_loader, val_loader = load_data(data_path=args.data_path, n_samples=args.n_samples)
 
     model = train_model(
         model=model,
@@ -39,6 +39,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data_path", dest="data_path", type=str, required=True)
     parser.add_argument("-e", "--epochs", dest="epochs", type=int, default=10)
+    parser.add_argument("-n", "--n_samples", dest="n_samples", type=int, default=-1)
     args = parser.parse_args()
 
     main(args)
