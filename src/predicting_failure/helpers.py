@@ -50,6 +50,7 @@ def load_data(data_path:str):
         labels = hf[f'unit_{unit_num}'][:,-1,:]
 
 
+    print(f"load_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
 
     # Create Dataset and DataLoader
     dataset = MyDataset(features, labels)
@@ -67,11 +68,30 @@ def load_data(data_path:str):
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
 
 
-
     return train_loader, val_loader
 
 
-# def format_data(data_path:str):
-#     '''
-#     Will load from pandas to hdf5 in LSTM format
-#     '''
+def load_eval_data(data_path:str):
+    '''
+    Takes in hdf5 file and returns Training and Valudation data loaders
+
+    '''
+    with h5py.File(data_path, 'r') as hf:
+        unit_num = data_path[data_path.rfind("_")+1:data_path.rfind(".h5")]
+        # Not selecting the Unit number and cycle number as trainigng features, excluding the lables
+        features = hf[f'unit_test_{unit_num}'][:,2:-1,:]
+        # Selecting only the RUL data to predict on
+        labels = hf[f'unit_test_{unit_num}'][:,-1,:]
+
+    print(f"load_eval_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
+
+    # Create Dataset and DataLoader
+    dataset = MyDataset(features, labels)
+
+
+    eval_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+
+
+    return eval_loader
+

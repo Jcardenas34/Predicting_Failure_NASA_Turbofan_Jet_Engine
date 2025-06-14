@@ -1,7 +1,11 @@
+import time
+import h5py
 import torch
+from sklearn.metrics import accuracy_score
 from predicting_failure.models import Recurrent
 from predicting_failure.helpers import EarlyStopping
-import time
+from predicting_failure.helpers import load_data
+from predicting_failure.models import Recurrent
 
 def time_function(func):
     def wrapper(*args, **kwargs):
@@ -81,3 +85,61 @@ def train_model(model, train_loader, val_loader, loss_function, optimizer, num_e
             break
 
     return model
+
+
+def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
+    '''
+    Evaluates model input where input is passed as an hdf5 file
+
+    '''
+
+    # 1. Initialize the model
+    model = Recurrent()
+    state_dict = torch.load(model_path, weights_only=True)
+    model.load_state_dict(state_dict)
+
+    if torch.cuda.is_available():
+        print("Using GPU")
+    else:
+        print("No GPU, using CPU")
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
+
+    # Initialize variables to store evaluation metrics
+    total_loss = 0
+    all_predictions = []
+    all_labels = []
+
+    model.eval()
+    # Perform evaluation
+    with torch.no_grad():
+        for inputs, labels in eval_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            outputs = model(inputs)
+            loss = loss_function(outputs, labels)
+            total_loss += loss.item()
+            predictions = torch.argmax(outputs, dim=1)
+            all_predictions.extend(predictions.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    # Calculate average loss and accuracy
+    average_loss = total_loss / len(eval_loader)
+
+    print("Printing: Predicted_RUL, true_RUL")
+    for sample in range(5):
+        print(f"Sample {sample}")
+        for i,j in zip(outputs[sample],labels[sample]):
+            # if i.item() == 0.0 or j == 0.0:
+                # break
+            print(f"{i.item():2f}, {j.item():2f}")
+    # accuracy = accuracy_score(all_labels, all_predictions)
+
+    # Print the results
+    print(f"Average Test Loss: {average_loss:.4f}")
+    # print(f"Test Accuracy: {accuracy:.4f}")
+
+
