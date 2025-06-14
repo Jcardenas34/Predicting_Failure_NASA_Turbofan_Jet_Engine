@@ -1,8 +1,10 @@
 import h5py
 import numpy as np
 import torch 
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader, random_split, TensorDataset
 from torch.nn.utils.rnn import pad_sequence
+from sklearn.preprocessing import StandardScaler
+
 class MyDataset(Dataset):
     def __init__(self, data, labels):
         self.data = data
@@ -37,54 +39,118 @@ class EarlyStopping:
                     print("Stopping early as no improvement has been observed.")
 
 
-def load_data(data_path:str, n_samples:int=-1): # -> tuple[Dataoader,]:
-    '''
-    Takes in hdf5 file and returns Training and Validation data loaders
+# def load_data(data_path:str, n_samples:int=-1): # -> tuple[Dataoader,]:
+#     '''
+#     Takes in hdf5 file and returns Training and Validation data loaders
 
-    '''
+#     '''
 
-    if n_samples<-2:
-        raise ValueError("n_samples is <=0, Please choose a positive integer greater than 0 for sample size") 
+#     if n_samples<-2:
+#         raise ValueError("n_samples is <=0, Please choose a positive integer greater than 0 for sample size") 
+
+#     try:
+#         with h5py.File(data_path, 'r') as hf:
+            
+#             # unit_num = data_path[data_path.rfind("_")+1:data_path.rfind(".h5")]
+
+#             if n_samples == -1:
+#                 # Not selecting the Unit number and cycle number as training features, excluding the lables
+#                 features = hf[f'engine_data'][:,:,2:-1]
+#                 # Selecting only the RUL data to predict on
+#                 labels   = hf[f'engine_data'][:,:,-1][:,-1]
+#             else:
+#                 # Not selecting the Unit number and cycle number as training features, excluding the lables
+#                 features = hf[f'engine_data'][:n_samples,:,2:-1]
+#                 # Selecting only the RUL data to predict on
+#                 labels   = hf[f'engine_data'][:n_samples,:,-1][:,-1]
+
+
+
+
+#         print(f"load_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
+#         print(features[0])
+#         print(labels[0])
+
+#         # Create Dataset and DataLoader
+#         dataset = MyDataset(features, labels)
+
+#         # Define split ratio
+#         dataset_size = len(dataset)
+#         train_size = int(0.8 * dataset_size)
+#         val_size = dataset_size - train_size
+
+#         # Split the dataset
+#         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+
+
+#         # Create DataLoaders
+#         train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
+#         val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+
+
+#         return train_loader, val_loader
+    
+#     except ValueError as e:
+#         print(f"Error: {e}")
+
+
+
+def load_data(data_path: str, n_samples: int = -1):
+    '''
+    Loads data from HDF5, scales features using training set stats,
+    splits into train and validation, returns DataLoaders.
+    '''
+    if n_samples < -2:
+        raise ValueError("n_samples must be positive or -1 (for full dataset).")
 
     try:
         with h5py.File(data_path, 'r') as hf:
-            
-            # unit_num = data_path[data_path.rfind("_")+1:data_path.rfind(".h5")]
-
             if n_samples == -1:
-                # Not selecting the Unit number and cycle number as training features, excluding the lables
-                features = hf[f'engine_data'][:,:,2:-1]
-                # Selecting only the RUL data to predict on
-                labels   = hf[f'engine_data'][:,:,-1][:,-1]
+                features = hf['engine_data'][:, :, 2:-1]  # shape: (N, T, F)
+                labels   = hf['engine_data'][:, :, -1][:, -1]  # shape: (N,)
             else:
-                # Not selecting the Unit number and cycle number as training features, excluding the lables
-                features = hf[f'engine_data'][:n_samples,:,2:-1]
-                # Selecting only the RUL data to predict on
-                labels   = hf[f'engine_data'][:n_samples,:,-1][:,-1]
+                features = hf['engine_data'][:n_samples, :, 2:-1]
+                labels   = hf['engine_data'][:n_samples, :, -1][:, -1]
 
+        print(f"load_data(), Features shape: {features.shape}, Labels shape: {labels.shape}")
 
-
-        print(f"load_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
-        print(features[0])
-        print(labels[0])
-
-        # Create Dataset and DataLoader
-        dataset = MyDataset(features, labels)
-
-        # Define split ratio
-        dataset_size = len(dataset)
+        # Split indices first
+        dataset_size = features.shape[0]
         train_size = int(0.8 * dataset_size)
         val_size = dataset_size - train_size
 
-        # Split the dataset
-        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+        train_features = features[:train_size]  # (N_train, T, F)
+        train_labels   = labels[:train_size]
+        val_features   = features[train_size:]
+        val_labels     = labels[train_size:]
 
-        # Create DataLoaders
+        # Reshape for scaler: (N*T, F)
+        N_train, T, F = train_features.shape
+        train_features_flat = train_features.reshape(-1, F)
+
+        scaler = StandardScaler()
+        scaler.fit(train_features_flat)  # Fit on training data only
+
+        # Apply transform to both train and val
+        train_features_scaled = scaler.transform(train_features_flat).reshape(N_train, T, F)
+        val_features_scaled = scaler.transform(val_features.reshape(-1, F)).reshape(val_features.shape)
+
+        # Convert to tensors
+        train_tensor_x = torch.tensor(train_features_scaled, dtype=torch.float32)
+        train_tensor_y = torch.tensor(train_labels, dtype=torch.float32)
+        val_tensor_x = torch.tensor(val_features_scaled, dtype=torch.float32)
+        val_tensor_y = torch.tensor(val_labels, dtype=torch.float32)
+
+        # Create Datasets
+        train_dataset = TensorDataset(train_tensor_x, train_tensor_y)
+        val_dataset   = TensorDataset(val_tensor_x, val_tensor_y)
+
+        # DataLoaders
         train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
-        val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+        val_loader   = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
 
-
-        return train_loader, val_loader
+        return train_loader, val_loader #, scaler  # Return scaler too if needed later
     
     except ValueError as e:
         print(f"Error: {e}")
