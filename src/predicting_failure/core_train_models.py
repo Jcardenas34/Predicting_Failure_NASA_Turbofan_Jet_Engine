@@ -95,13 +95,16 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
 
     # 1. Initialize the model
     model = Recurrent()
-    state_dict = torch.load(model_path, weights_only=True)
-    model.load_state_dict(state_dict)
+
 
     if torch.cuda.is_available():
         print("Using GPU")
+        state_dict = torch.load(model_path, weights_only=False)
     else:
         print("No GPU, using CPU")
+        state_dict = torch.load(model_path, weights_only=True)
+
+    model.load_state_dict(state_dict)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -115,7 +118,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
     model.eval()
     # Perform evaluation
     with torch.no_grad():
-        for inputs, labels, lens in eval_loader:
+        for inputs, labels, in eval_loader:
             inputs = inputs.to(device)
             labels = labels.to(device)
 
