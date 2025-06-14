@@ -18,7 +18,8 @@ def main(args):
     # Retrieve the model
     # model = Recurrent(n_features=24) 
     model = SingleRUL(n_features=24) 
-    loss_function = nn.L1Loss() # Appropriate becase we are predicting RUL, want to predict integer
+    # loss_function = nn.L1Loss() # Appropriate becase we are predicting RUL, want to predict integer
+    loss_function = nn.MSELoss() # Appropriate becase we are predicting RUL, want to predict integer
     optimizer = Adam(model.parameters(), lr=0.001)
 
     # data_path =  "/Users/chiral/git_projects/Predicting_Failure_NASA_Turbofan_Jet_Engine/data/unit_1.h5"
