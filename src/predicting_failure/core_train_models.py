@@ -40,7 +40,7 @@ def train_model(model, train_loader, val_loader, loss_function, optimizer, num_e
     model.to(device)
     
     patience = 5
-    delta = .1
+    delta = .001
     early_stopping = EarlyStopping(patience=patience, delta=delta, verbose=True)
 
     # Train using num_epochs
