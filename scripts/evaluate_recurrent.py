@@ -1,7 +1,7 @@
-coreimport torch.nn as nn
-from predicting_failure.helpers import load_eval_data, load_data
-from predicting_failure.core_train_models import evaluate_model
 import argparse
+import torch.nn as nn
+from predicting_failure.helpers import load_eval_data
+from predicting_failure.core_train_models import evaluate_model
 
 
 def main(args):
