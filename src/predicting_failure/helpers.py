@@ -103,17 +103,22 @@ def collate_fn(batch):
 
     return xs_padded, ys_padded, lengths
 
-def load_eval_data(data_path:str):
+def load_eval_data(data_path:str, n_samples:int=-1):
     '''
-    Takes in hdf5 file and returns Training and Valudation data loaders
+    Takes in hdf5 file and returns Training and Validation data loaders
 
     '''
     with h5py.File(data_path, 'r') as hf:
-        unit_num = data_path[data_path.rfind("_")+1:data_path.rfind(".h5")]
-        # Not selecting the Unit number and cycle number as training features, excluding the lables
-        features = hf[f'unit_test_{unit_num}'][:,2:-1,:]
-        # Selecting only the RUL data to predict on
-        labels = hf[f'unit_test_{unit_num}'][:,-1,:]
+        if n_samples == -1:
+            # Not selecting the Unit number and cycle number as training features, excluding the lables
+            features = hf[f'engine_data'][:,:,2:-1]
+            # Selecting only the RUL data to predict on
+            labels   = hf[f'engine_data'][:,:,-1]
+        else:
+            # Not selecting the Unit number and cycle number as training features, excluding the lables
+            features = hf[f'engine_data'][:n_samples,:,2:-1]
+            # Selecting only the RUL data to predict on
+            labels   = hf[f'engine_data'][:n_samples,:,-1]
 
     print(f"load_eval_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
 
