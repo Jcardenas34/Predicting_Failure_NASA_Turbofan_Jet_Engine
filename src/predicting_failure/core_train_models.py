@@ -55,6 +55,8 @@ def train_model(model, train_loader, val_loader, loss_function, optimizer, num_e
             targets = targets.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
+            print(outputs.shape, targets.shape)
+            print(outputs[0], targets[0])
             loss = loss_function(outputs, targets)
             loss.backward()
             optimizer.step()
@@ -102,7 +104,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
         state_dict = torch.load(model_path)
     else:
         print("No GPU, using CPU")
-        state_dict = torch.load(model_path, weights_only=True)
+        state_dict = torch.load(model_path, weights_only=True, map_location=torch.device('cpu'))
 
     model.load_state_dict(state_dict)
 
@@ -117,6 +119,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
 
     model.eval()
     # Perform evaluation
+    sample = 0
     with torch.no_grad():
         for inputs, labels, lens in eval_loader:
             inputs = inputs.to(device)
@@ -126,20 +129,19 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
             loss = loss_function(outputs, labels)
             total_loss += loss.item()
             predictions = torch.argmax(outputs, dim=1)
-            print(f"Predictions: {predictions}, Labels: {labels}")
-            all_predictions.extend(predictions.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
+
+            # all_predictions.extend(predictions.cpu().numpy())
+            # all_labels.extend(labels.cpu().numpy())
+            print("Predictions, Labels")
+            for i,j in zip(outputs[sample],labels[sample]):
+                print(f"{i.item():2f}, {j.item():2f}")
+            sample+=1
+
 
     # Calculate average loss and accuracy
     # average_loss = total_loss / len(eval_loader)
 
-    # print("Printing: Predicted_RUL, true_RUL")
-    # for sample in range(5):
-    #     print(f"Sample {sample}")
-    #     for i,j in zip(outputs[sample],labels[sample]):
-    #         # if i.item() == 0.0 or j == 0.0:
-    #             # break
-    #         print(f"{i.item():2f}, {j.item():2f}")
+
     # # accuracy = accuracy_score(all_labels, all_predictions)
 
     # # Print the results

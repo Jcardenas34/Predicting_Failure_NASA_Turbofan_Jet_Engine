@@ -55,12 +55,12 @@ def load_data(data_path:str, n_samples:int=-1): # -> tuple[Dataoader,]:
                 # Not selecting the Unit number and cycle number as training features, excluding the lables
                 features = hf[f'engine_data'][:,:,2:-1]
                 # Selecting only the RUL data to predict on
-                labels   = hf[f'engine_data'][:,:,-1]
+                labels   = hf[f'engine_data'][:,:,-1][:,-1]
             else:
                 # Not selecting the Unit number and cycle number as training features, excluding the lables
                 features = hf[f'engine_data'][:n_samples,:,2:-1]
                 # Selecting only the RUL data to predict on
-                labels   = hf[f'engine_data'][:n_samples,:,-1]
+                labels   = hf[f'engine_data'][:n_samples,:,-1][:,-1]
 
 
 
@@ -113,12 +113,12 @@ def load_eval_data(data_path:str, n_samples:int=-1):
             # Not selecting the Unit number and cycle number as training features, excluding the lables
             features = hf[f'engine_data'][:,:,2:-1]
             # Selecting only the RUL data to predict on
-            labels   = hf[f'engine_data'][:,:,-1]
+            labels   = hf[f'engine_data'][:,:,-1,-1]
         else:
             # Not selecting the Unit number and cycle number as training features, excluding the lables
             features = hf[f'engine_data'][:n_samples,:,2:-1]
             # Selecting only the RUL data to predict on
-            labels   = hf[f'engine_data'][:n_samples,:,-1]
+            labels   = hf[f'engine_data'][:n_samples,:,-1,-1]
 
     print(f"load_eval_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
 

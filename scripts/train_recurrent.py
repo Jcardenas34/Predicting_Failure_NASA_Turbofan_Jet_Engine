@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from torch.optim import Adam
-from predicting_failure.models import Recurrent
+from predicting_failure.models import Recurrent, SingleRUL
 from predicting_failure.helpers import load_data
 from predicting_failure.core_train_models import train_model
 
@@ -16,7 +16,8 @@ def main(args):
     """
 
     # Retrieve the model
-    model = Recurrent(n_features=24) 
+    # model = Recurrent(n_features=24) 
+    model = SingleRUL(n_features=24) 
     loss_function = nn.L1Loss() # Appropriate becase we are predicting RUL, want to predict integer
     optimizer = Adam(model.parameters(), lr=0.001)
 
