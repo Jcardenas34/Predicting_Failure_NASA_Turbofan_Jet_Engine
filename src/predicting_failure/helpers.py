@@ -224,16 +224,6 @@ def load_eval_data_singleRUL(data_path:str, n_samples:int=-1):
 
     '''
 
-    try:
-        with h5py.File(data_path, 'r') as hf:
-            if n_samples == -1:
-                features = hf['engine_data'][:, :, 2:-1]  # shape: (N, T, F)
-                labels   = hf['engine_data'][:, :, -1][:, -1]  # shape: (N,)
-            else:
-                features = hf['engine_data'][:n_samples, :, 2:-1]
-                labels   = hf['engine_data'][:n_samples, :, -1][:, -1]
-
-
     with h5py.File(data_path, 'r') as hf:
         if n_samples == -1:
             # Not selecting the Unit number and cycle number as training features, excluding the lables
