@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score
 from predicting_failure.models import Recurrent
 from predicting_failure.helpers import EarlyStopping
 from predicting_failure.helpers import load_data
-from predicting_failure.models import Recurrent
+from predicting_failure.models import Recurrent, SingleRUL
 
 def time_function(func):
     def wrapper(*args, **kwargs):
@@ -112,7 +112,8 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
     '''
 
     # 1. Initialize the model
-    model = Recurrent()
+    # model = Recurrent()
+    model = SingleRUL()
 
 
 
