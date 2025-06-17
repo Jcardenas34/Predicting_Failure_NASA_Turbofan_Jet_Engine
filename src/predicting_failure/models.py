@@ -1,4 +1,5 @@
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -120,9 +121,15 @@ class Recurrent(nn.Module):
 
 class SingleRUL(nn.Module):
     '''
-    Model that will predict failure of teh jet engine using 
+    LSTM based model that will predict number of remaining cycles for the engine
+    up to a maximum of 256 cycles
+
+    args 
+        n_features (int): The number of input features used to train the network
+        time_steps 
+    
     '''
-    def __init__(self, n_features=24, time_steps=150):
+    def __init__(self, n_features=24):
         super().__init__()
 
         # Defining the model layers
@@ -133,8 +140,6 @@ class SingleRUL(nn.Module):
         self.transition_layer = nn.Linear(64,  32)
         self.output_layer     = nn.Linear(32,  1)
 
-        self.network_body = []
-
 
 
     def forward(self, x):
@@ -142,9 +147,11 @@ class SingleRUL(nn.Module):
         :param x: Input tensor of shape (batch, seq_len, features)
         :return: RUL predictions of shape (batch,)
         '''
-        x, _ = self.lstm_layer(x)                  # (batch, seq_len, hidden)
-        last_timestep = x[:, -1, :]                   # (batch, hidden)
-        x = F.relu(self.dense_layer(last_timestep))
+        x, _ = self.lstm_layer(x)                      # (batch, seq_len, hidden)
+        last_time_step = x[:, -1, :]                   # (batch, hidden)
+        x = F.relu(self.dense_layer(last_time_step))
         x = F.relu(self.transition_layer(x))
-        rul = self.output_layer(x)                 # (batch, 1)
-        return rul.squeeze(-1)    
+        x = self.output_layer(x)                        # (batch, 1)
+        x = torch.sigmoid(x)*256.0
+
+        return x.squeeze(-1)     
