@@ -147,7 +147,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
             outputs = model(inputs)
             loss = loss_function(outputs, labels)
             total_loss += loss.item()
-            predictions = torch.argmax(outputs, dim=1)
+            # predictions = torch.argmax(outputs, dim=1)
 
             # all_predictions.extend(predictions.cpu().numpy())
             # all_labels.extend(labels.cpu().numpy())
