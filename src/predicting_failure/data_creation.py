@@ -12,6 +12,15 @@ def create_train_data(data_path:str, out_name:str="train_engine_data.h5", window
     '''
     Creates an hdf5 data from the data_path.csv file
 
+    args:
+        data_path (str): File path to data
+        out_name (str): What the training data will be named "train_engine_data.h5" is the default
+        window_size (int): How large the RUL prediction data is
+        n_engines (int): How many engines you want to use in the dataset creation (There are 100 max)
+    
+    returns:
+        df (hdf5 file): An hdf5 file type with the "engine_data" key
+        
     '''
 
 

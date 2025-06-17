@@ -15,7 +15,8 @@ setup(
         "flask",
         "torch",
         "h5py",
-
+        "torchvision", 
+        "torchaudio"
         # Add any runtime deps here (not dev tools or testing libs)
     ],
     author="Juan Cardenas",

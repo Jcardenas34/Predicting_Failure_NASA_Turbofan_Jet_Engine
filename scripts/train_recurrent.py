@@ -1,8 +1,8 @@
-import torch.nn as nn
 import torch
+import torch.nn as nn
 from torch.optim import Adam
-from predicting_failure.models import Recurrent, SingleRUL
 from predicting_failure.helpers import load_data
+from predicting_failure.models import Recurrent, SingleRUL
 from predicting_failure.core_train_models import train_model
 
 import logging

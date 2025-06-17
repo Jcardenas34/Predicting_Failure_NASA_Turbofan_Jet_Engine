@@ -1,9 +1,9 @@
 import h5py
-import numpy as np
 import torch 
-from torch.utils.data import Dataset, DataLoader, random_split, TensorDataset
+import numpy as np
 from torch.nn.utils.rnn import pad_sequence
 from sklearn.preprocessing import StandardScaler
+from torch.utils.data import Dataset, DataLoader, random_split, TensorDataset
 
 class MyDataset(Dataset):
     def __init__(self, data, labels):
@@ -19,7 +19,16 @@ class MyDataset(Dataset):
         return x_tensor, y_tensor
 
 class EarlyStopping:
-    def __init__(self, patience=5, delta=0, verbose=False):
+    '''
+    Stops algorithm training early if loss metric (training/validation)
+    does not improve by 'delta' over 'patience' epochs
+
+    args:
+        patience (int): Number of epochs to wait for a minimum of 'delta' improvement in loss
+        delta (float): The amount by which the loss must improve each epoch to continue training
+        verbose (bool): Weather the function will send debugging text to the console 
+    '''
+    def __init__(self, patience:int=5, delta:float=0, verbose:bool=False):
         self.patience = patience
         self.delta = delta
         self.verbose = verbose
@@ -28,6 +37,17 @@ class EarlyStopping:
         self.stop_training = False
     
     def check_early_stop(self, val_loss):
+        '''
+        Checks weather the loss of the previous run has improved by delta
+        iterates a counter if not, counter will stop training when counter
+        is greater than or equal to self.patience
+
+        args:
+            val_loss (float): The validation loss of the current epoch
+
+        returns:
+            None
+        '''
         if self.best_loss is None or val_loss < self.best_loss - self.delta:
             self.best_loss = val_loss
             self.no_improvement_count = 0
@@ -147,8 +167,8 @@ def load_data(data_path: str, n_samples: int = -1):
         val_dataset   = TensorDataset(val_tensor_x, val_tensor_y)
 
         # DataLoaders
-        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
-        val_loader   = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers=4)
+        val_loader   = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4)
 
         return train_loader, val_loader #, scaler  # Return scaler too if needed later
     

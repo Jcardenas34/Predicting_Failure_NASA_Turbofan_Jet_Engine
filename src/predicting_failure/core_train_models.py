@@ -1,6 +1,7 @@
 import time
 import h5py
 import torch
+from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from predicting_failure.models import Recurrent
 from predicting_failure.helpers import EarlyStopping
@@ -19,28 +20,37 @@ def time_function(func):
 
 
 @time_function
-def train_model(model, train_loader, val_loader, loss_function, optimizer, num_epochs=10):
+def train_model(model, train_loader, val_loader, loss_function, optimizer, num_epochs:int = 10, patience:int = 5, delta:float=0.001):
     """
     Train the model using the provided data loader, criterion, and optimizer.
 
-    :param model: The model to train.
-    :param train_loader: DataLoader for training data.
-    :param criterion: Loss function.
-    :param optimizer: Optimizer for updating model parameters.
-    :param num_epochs: Number of epochs to train the model.
+    Args:
+        model: The model to train.
+        train_loader: DataLoader for training data.
+        criterion: Loss function.
+        optimizer: Optimizer for updating model parameters.
+        num_epochs: Number of epochs to train the model.
+    
+    returns:
+        model: A trained pytorch model defined in models.py
+
     """
     # Set model to training mode
 
     if torch.cuda.is_available():
         print("Using GPU")
+        device = torch.device("cuda")
+        model.to(device)
+    elif torch.backends.mps.is_available():
+        print("Using MPS")
+        device = torch.device("mps")
+        model.to(device)
     else:
         print("No GPU, using CPU")
+        device = torch.device("cpu")
+        model.to(device)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
     
-    patience = 5
-    delta = .001
     early_stopping = EarlyStopping(patience=patience, delta=delta, verbose=True)
 
     # Train using num_epochs
@@ -93,10 +103,18 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
     '''
     Evaluates model input where input is passed as an hdf5 file
 
+    args:
+        model_path (str):
+        data_path (str):
+        eval_loader:
+        loss_function ()::
+
     '''
 
     # 1. Initialize the model
     model = Recurrent()
+
+
 
 
     if torch.cuda.is_available():
