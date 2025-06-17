@@ -1,4 +1,5 @@
 import h5py
+import pickle
 import torch 
 import numpy as np
 from torch.nn.utils.rnn import pad_sequence
@@ -114,6 +115,31 @@ class EarlyStopping:
 #     except ValueError as e:
 #         print(f"Error: {e}")
 
+def persistify_scaling_object(scaling_object, scaling_object_name: str) -> None:
+    '''
+    Will save an instance of the scaling function used to preprocess the data
+    '''
+    
+    filename = "./scalars/"+scaling_object_name
+
+    with open(filename, 'wb') as file:
+        pickle.dump(scaling_object, file)
+
+    print(f"Saved scalar at : {filename} ")
+
+
+def load_scaling_object(scalar_path: str) -> StandardScaler:
+    '''
+    Load up the existing scalar used to train the model
+    allows for live preprocessing of incoming data
+    '''
+
+    with open(scalar_path, 'rb') as file:
+        loaded_scaler = pickle.load(file)
+
+    
+
+    return loaded_scaler
 
 
 def load_data(data_path: str, n_samples: int = -1, batch_size:int = 64):
@@ -151,6 +177,7 @@ def load_data(data_path: str, n_samples: int = -1, batch_size:int = 64):
 
         scaler = StandardScaler()
         scaler.fit(train_features_flat)  # Fit on training data only
+        persistify_scaling_object(scaler, "scalar_FD001.pkl")
 
         # Apply transform to both train and val
         train_features_scaled = scaler.transform(train_features_flat).reshape(N_train, T, F)
@@ -218,7 +245,7 @@ def load_eval_data(data_path:str, n_samples:int=-1):
 
     return eval_loader
 
-def load_eval_data_singleRUL(data_path:str, n_samples:int=-1):
+def load_eval_data_singleRUL(data_path:str, scalar_path:str, batch_size:int, n_samples:int=-1):
     '''
     Takes in hdf5 file and returns Training and Validation data loaders
 
@@ -238,11 +265,22 @@ def load_eval_data_singleRUL(data_path:str, n_samples:int=-1):
 
     print(f"load_eval_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
 
-    # Create Dataset and DataLoader
-    dataset = MyDataset(features, labels)
+        # Reshape for scaler: (N*T, F)
+    N_eval, T, F = features.shape
+    eval_features_flat = features.reshape(-1, F)
+    
+    # Need to scale data appropriately
+    scalar = load_scaling_object(scalar_path=scalar_path)
+    # Apply transform to both eval and val
+    eval_features_scaled = scalar.transform(eval_features_flat).reshape(N_eval, T, F)
 
+    # Convert to tensors
+    eval_tensor_x = torch.tensor(eval_features_scaled, dtype=torch.float32)
+    eval_tensor_y = torch.tensor(labels, dtype=torch.float32)
 
-    eval_loader = DataLoader(dataset, batch_size=32, shuffle=False)
+    eval_dataset = TensorDataset(eval_tensor_x, eval_tensor_y)
+
+    eval_loader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False)
 
 
 

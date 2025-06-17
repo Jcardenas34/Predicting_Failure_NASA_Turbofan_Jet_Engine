@@ -6,7 +6,11 @@ from predicting_failure.core_train_models import evaluate_model
 
 def main(args):
 
-    eval_loader = load_eval_data_singleRUL(args.data_path, args.n_samples)
+    eval_loader = load_eval_data_singleRUL(data_path=args.data_path, 
+                                           scalar_path="scalars/scalar_FD001.pkl",
+                                           batch_size=32, 
+                                           n_samples=args.n_samples
+                                           )
     loss_function = nn.L1Loss()
 
     evaluate_model(model_path=args.model_path, data_path=args.data_path, eval_loader=eval_loader, loss_function=loss_function)

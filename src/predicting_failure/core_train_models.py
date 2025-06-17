@@ -152,7 +152,8 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
             # all_predictions.extend(predictions.cpu().numpy())
             # all_labels.extend(labels.cpu().numpy())
             print("Predictions, Labels")
-            for i,j in zip(outputs[sample],labels[sample]):
+            # for i,j in zip(outputs[sample],labels[sample]):
+            for i,j in zip(outputs,labels):
                 print(f"{i.item():2f}, {j.item():2f}")
             sample+=1
 
