@@ -116,7 +116,7 @@ class EarlyStopping:
 
 
 
-def load_data(data_path: str, n_samples: int = -1):
+def load_data(data_path: str, n_samples: int = -1, batch_size:int = 64):
     '''
     Loads data from HDF5, scales features using training set stats,
     splits into train and validation, returns DataLoaders.
@@ -167,8 +167,8 @@ def load_data(data_path: str, n_samples: int = -1):
         val_dataset   = TensorDataset(val_tensor_x, val_tensor_y)
 
         # DataLoaders
-        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers=4)
-        val_loader   = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,  num_workers=4)
+        val_loader   = DataLoader(val_dataset  , batch_size=batch_size, shuffle=False, num_workers=4)
 
         return train_loader, val_loader #, scaler  # Return scaler too if needed later
     
@@ -213,6 +213,46 @@ def load_eval_data(data_path:str, n_samples:int=-1):
 
 
     eval_loader = DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=collate_fn)
+
+
+
+    return eval_loader
+
+def load_eval_data_singleRUL(data_path:str, n_samples:int=-1):
+    '''
+    Takes in hdf5 file and returns Training and Validation data loaders
+
+    '''
+
+    try:
+        with h5py.File(data_path, 'r') as hf:
+            if n_samples == -1:
+                features = hf['engine_data'][:, :, 2:-1]  # shape: (N, T, F)
+                labels   = hf['engine_data'][:, :, -1][:, -1]  # shape: (N,)
+            else:
+                features = hf['engine_data'][:n_samples, :, 2:-1]
+                labels   = hf['engine_data'][:n_samples, :, -1][:, -1]
+
+
+    with h5py.File(data_path, 'r') as hf:
+        if n_samples == -1:
+            # Not selecting the Unit number and cycle number as training features, excluding the lables
+            features = hf[f'engine_data'][:,:,2:-1]
+            # Selecting only the RUL data to predict on
+            labels   = hf[f'engine_data'][:,:,-1][:,-1]
+        else:
+            # Not selecting the Unit number and cycle number as training features, excluding the lables
+            features = hf[f'engine_data'][:n_samples,:,2:-1]
+            # Selecting only the RUL data to predict on
+            labels   = hf[f'engine_data'][:n_samples,:,-1,][:,-1]
+
+    print(f"load_eval_data(), Features shape:{features.shape}, Labels shape: {labels.shape}")
+
+    # Create Dataset and DataLoader
+    dataset = MyDataset(features, labels)
+
+
+    eval_loader = DataLoader(dataset, batch_size=32, shuffle=False)
 
 
 

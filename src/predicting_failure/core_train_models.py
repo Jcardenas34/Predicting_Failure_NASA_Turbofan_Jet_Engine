@@ -139,7 +139,7 @@ def evaluate_model(model_path:str, data_path:str, eval_loader, loss_function):
     # Perform evaluation
     sample = 0
     with torch.no_grad():
-        for inputs, labels, lens in eval_loader:
+        for inputs, labels in eval_loader:
             inputs = inputs.to(device)
             labels = labels.to(device)
 
